@@ -1,17 +1,24 @@
+
 object Application {
   def main(args: Array[String]): Unit = {
-    var sqrt = Function("sqrt = x ^ (1/2)")
+//    var sqrt = Function("x ^ (1/2)") as "sqrt"
     //    println(cos.body)
-    println(Function("f = sqrt(1 - sin(x) ^ 2)")(2))
-    //    println(cos(1))
+//    println(Function("sqrt(1 - sin(x) ^ 2)")(2).simplified.value.get)
+//        println(cos(1))
     //    println(Function("f = 1 + 3*x*cos(y + x)").body)
     //    println(Function("f = 1 + 3*x*cos(y + x)")(1, 2).body)
     //        println(Function("f =   3 * (2) + sin(x + y)"))
-//        val f = Function("f = sin(cos(3 * ((sin(2) + (4))) + sin(x + y) + x) + 2 + cos(3))")
-    //    println(f(3, 4))
-    val f = Function("f = sin(cos(3 * ((sin(2) + 4) * (4 - x)) + sin(x + y) + 2) + 2 + cos(3)) + 3*x*cos(y + x)")
-//            println(f)
-    println(f(1, 2))
+//        println(Function("sin(cos(3 * ((sin(2) + (4))) + sin(x + y) + x) + 2 + cos(3))"))
+//    println(f.arguments)
+//        println(f(3, 4).simplified.value)
+
+    if (!Function.bracketsOk("(add(add(cos(add(add(mul(3,(mul((add(sin(2),4)),(add(4,neg(x)))))),sin(add(x,y))),2)),2),cos(3)))")) throw new Error("helo")
+//    if (!Function.bracketsOk("(add(add(cos(add(add(mul(3,mul(add(sin(2),4)),add(4,neg(x)))),sin(add(x,y))),2)),2),cos(3)))")) throw new Error("helo")
+
+  val f = Function("sin(cos(3 * ((sin(2) + 4) * (4 - x)) + sin(x + y) + 2) + 2 + cos(3)) + 3*x*cos(y + x)")
+            println(f)
+
+    println(f(1, 2).value)
     //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
     //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
     //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
@@ -19,8 +26,7 @@ object Application {
     //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
     //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
     //    val f = Function("f =")
-    //    println(s"Successfully parsed function '${f.name}' with args (${f.args.mkString(", ")}) and body ${f.body}")
-
+    //    //    println(s"Successfully parsed function '${f.name}' with args (${f.args.mkString(", ")}) and body ${f.body}")
     val x = 5
     val y = 6
 

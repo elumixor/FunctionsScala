@@ -9,6 +9,8 @@ class FunctionTest extends FlatSpec {
   }
 
   it should "correctly remove redundant braces" in {
-    assert(Function("sqrt = x ^ (1/2)").body == "exp(x,div(1,2))")
+    assert(Function("sqrt = x ^ (1/2)").toString == "exp(x,div(1,2))")
   }
+
+
 }
