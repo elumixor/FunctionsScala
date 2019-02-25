@@ -1,57 +1,24 @@
+import scalafx.Includes._
+import scalafx.application.JFXApp
+import scalafx.scene.Scene
+import scalafx.scene.shape.Rectangle
 
-object Application {
-  def main(args: Array[String]): Unit = {
-//    var sqrt = Function("x ^ (1/2)") as "sqrt"
-    //    println(cos.body)
-//    println(Function("sqrt(1 - sin(x) ^ 2)")(2).simplified.value.get)
-//        println(cos(1))
-    //    println(Function("f = 1 + 3*x*cos(y + x)").body)
-    //    println(Function("f = 1 + 3*x*cos(y + x)")(1, 2).body)
-    //        println(Function("f =   3 * (2) + sin(x + y)"))
-//        println(Function("sin(cos(3 * ((sin(2) + (4))) + sin(x + y) + x) + 2 + cos(3))"))
-//    println(f.arguments)
-//        println(f(3, 4).simplified.value)
+import scalafx.scene.paint.Color._
 
-    if (!Function.bracketsOk("(add(add(cos(add(add(mul(3,(mul((add(sin(2),4)),(add(4,neg(x)))))),sin(add(x,y))),2)),2),cos(3)))")) throw new Error("helo")
-//    if (!Function.bracketsOk("(add(add(cos(add(add(mul(3,mul(add(sin(2),4)),add(4,neg(x)))),sin(add(x,y))),2)),2),cos(3)))")) throw new Error("helo")
-
-  val f = Function("sin(cos(3 * ((sin(2) + 4) * (4 - x)) + sin(x + y) + 2) + 2 + cos(3)) + 3*x*cos(y + x)")
-            println(f)
-
-    println(f(1, 2).value)
-    //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
-    //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
-    //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
-    //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
-    //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
-    //    val f = Function("f = sin(cos(3 * ((sin(2) + (4)) * (4 - x)) + sin(x + y) + x) + 2 + cos(3)) + 3*x*cos(y + x)")
-    //    val f = Function("f =")
-    //    //    println(s"Successfully parsed function '${f.name}' with args (${f.args.mkString(", ")}) and body ${f.body}")
-    val x = 5
-    val y = 6
-
-    //    println(s"Value at x = $x, y = $y\nf($x, $y) = ${f(5, 6)}")
-
-    //        val k = Function("f = sin(cos(3 * x * y))")
-
-
-    //        println(k.body + " at 5, 3")
-    //        println(k.args)
-    //        println(k(Map("x" -> 5.0, "y" -> 3.0)))
-
-    //    println(Function("f = 3").body)
-    //    println(Function("f = 3"))
-    //    println(Function("f = (3)").body)
-    //    println(Function("f = (3)"))
-    //    println(Function("f = (-3)").body)
-    //    println(Function("f = (-3)"))
-    //    println(Function("f = x"))
-    //    println(Function("f = -x"))
-    //    println(Function("f = -(x)"))
-    //    println(Function("f = (-x)"))
-    //    println(Function("f = (((x)))"))
-
-    //        println(Function("f = (4 * (x + 3))")(3))
-    //        println(Function("f = 4 * (x + 3)")(3))
+object Application extends JFXApp {
+  stage = new JFXApp.PrimaryStage {
+    title.value = "Hello Stage"
+    width = 600
+    height = 450
+    scene = new Scene {
+      fill = LightGreen
+      content = new Rectangle {
+        x = 25
+        y = 40
+        width = 100
+        height = 100
+        fill <== when(hover) choose Green otherwise Red
+      }
+    }
   }
 }
