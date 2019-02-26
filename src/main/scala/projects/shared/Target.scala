@@ -1,4 +1,4 @@
-package projects.pathfinder
+package projects.shared
 
 import lib.p5
 import lib.traits.Locatable
