@@ -21,5 +21,30 @@ in mode creation and training to generate outputs
 Also how the model should look
 
 ## Solution ideas:
-> Various attempts to solve the problem.
-Whether they worked or not, pros and cons. 
+* Solved using gradient descent approach 
+    > This is not a valid solution, regarding reinforcement
+    learning and sort of defeats the purpose of guesser as
+    it directly uses the knowledge of target's value to get
+    closer towards it.
+    
+    ```scala
+    val target: Double = lib.p5.random(-1, 1)  
+    var guess: Double = lib.p5.random(-1, 1)        
+  
+    // using target here is not what we want for reinforcement learning
+    val MSE = lib.Function("(target - guess)^2")  
+    
+    val derived = MSE.derivative("guess")
+    val learningRate = .1
+    
+    /** Approach function */
+    def approximate(): Unit = {
+      // Compute gradient descent
+      val descent = derived(Map("target" -> target, "guess" -> guess)).value.get
+      
+      // Approximate guess
+      guess -= learningRate * descent
+    }
+    ```  
+
+    ddfsdfdkfdj

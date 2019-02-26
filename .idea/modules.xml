@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Functions.iml" filepath="$PROJECT_DIR$/.idea/modules/Functions.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Functions-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Functions-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/KotlinJs/KotlinJs.iml" filepath="$PROJECT_DIR$/KotlinJs/KotlinJs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/MachineScala.iml" filepath="$PROJECT_DIR$/.idea/modules/MachineScala.iml" />
     </modules>
   </component>
 </project>

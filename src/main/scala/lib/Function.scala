@@ -2,7 +2,7 @@ package lib
 
 import java.util.NoSuchElementException
 
-import lib.Function.{Branch, Simplifiable}
+import lib.Function.Simplifiable
 
 import scala.language.implicitConversions
 
@@ -227,17 +227,20 @@ object Function {
 
   private sealed case class Branch(func: Primitive, leaves: Seq[Function]) extends Function {
     override def copy: Function = Branch(func, leaves.map(_.copy))
+
     override def apply(namedArgs: Map[String, Double]): Function = Function.Branch(func, leaves.map(_ (namedArgs)))
       .simplified
+
     override def substitute(namedArgs: Map[String, Function]): Function = Function.Branch(func, leaves.map(_
       .substitute(namedArgs)))
+
     implicit override def toString: String = s"${func.name}(${leaves.map(_.toString).mkString(", ")})"
+
     override protected def _derivative(argument: String): Function = {
       val derived = leaves.map(_._derivative(argument))
       func.derivative(leaves, derived)
     }
   }
-  //  private class Primitive(func: F, arguments: Seq[String]) extends Branch(func, arguments.map(a => new Identity(a)))
 
   /** Primitive predef functions */
   private object primitives {
@@ -489,6 +492,7 @@ object Function {
 
     // Find argument bounds
     val tmp = findEnclosingScope(string.substring(split(0).length + 1, string.length))
+
     // Find operand's bounds
     val bounds = (split(0).length + 1 + tmp._1, split(0).length + 1 + tmp._2) // offset by first occurrence
 
@@ -499,7 +503,7 @@ object Function {
     val addPlus = if ((split(0).last == ')' || !isOperand(split(0).last)) && split(0).last != '(') "+" else ""
 
     // Repeat recursively until no operands found
-    replace(string.substring(0, split(0).length) + addPlus + replacement + '(' + operand + ')' + string.substring
+    replaceUnary(string.substring(0, split(0).length) + addPlus + replacement + '(' + operand + ')' + string.substring
     (bounds._2, string.length),
       operator, replacement)
   }
@@ -600,6 +604,8 @@ object Function {
 
       if (brackets == 0 && char == ',') commas = commas :+ index
     }
+
+    //    println(string)
 
     if (commas.length > arity - 1)
       throw new Error(s"$name's arity exceeded. Found ${commas.length + 1} arguments:  $arguments split at $commas")

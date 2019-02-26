@@ -72,4 +72,7 @@ object p5 {
   def polygon(points: Seq[(Int, Int)]): Unit = gc.fillPolygon(points.map(p => (p._1.toDouble, p._2.toDouble)))
   def text(text: String, x: Double, y: Double): Unit = gc.strokeText(text, x, y)
   def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit = gc.strokeLine(x1, y1, x2, y2)
+
+  // Register functions
+  lib.Function("x ^ (1/2)") as "sqrt"
 }

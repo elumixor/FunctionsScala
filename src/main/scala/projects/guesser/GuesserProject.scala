@@ -83,6 +83,9 @@ object GuesserProject extends ProjectBase {
       pf.render()
       p5.text("%.2f".format(pf.value), mapVisual(pf.value), pf.y + padding)
     }
+
+    // Error data
+    if (pf.isDefined) p5.text("Error " + "%.6f".format(guesser.error), padding, padding)
   }
   override def keyPressed(): Unit = {
     super.keyPressed()

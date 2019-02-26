@@ -6,6 +6,9 @@ import projects.shared.{Pathfinder, Target}
 import scalafx.scene.paint.Color
 
 object PathfinderProject extends ProjectBase {
+//  val distance = lib.Function("sqrt((xpf - xt) ^ 2 + (ypf - yt) ^ 2)")
+  val distance = lib.Function("(c - d) + (a - b)^2")
+
   private val pf = new Pathfinder() {
     location = p5.center
     speed = Vec2(1, 2)
