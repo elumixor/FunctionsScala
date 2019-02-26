@@ -1,4 +1,8 @@
+package lib
+
 import java.util.NoSuchElementException
+
+import lib.Function.{Branch, Simplifiable}
 
 import scala.language.implicitConversions
 
@@ -20,7 +24,7 @@ sealed abstract class Function {
     * @param args Argument values
     * @example
     * {{{
-    * val f = Function("x + 3 * y") // function
+    * val f = lib.Function("x + 3 * y") // function
     *
     * // Substituting
     * f(1)    // 1 + 3 * y
@@ -43,7 +47,7 @@ sealed abstract class Function {
     * @param namedArgs Map of named arguments: name -> value
     * @example
     * {{{
-    * val f = Function("x + 3 * y") // function
+    * val f = lib.Function("x + 3 * y") // function
     *
     * // Substituting
     * val partially       = f(Map("x" -> 1)) // 1 + 3 * y
@@ -71,8 +75,8 @@ sealed abstract class Function {
     * @note Simplification is done automatically on applying arguments.
     * @example
     * {{{
-    * Function("(3 + 6) * x").simplified     // 9 * x
-    * Function("(y + 6) * x")(Map("y" -> 3)) // 9 * x
+    * lib.Function("(3 + 6) * x").simplified     // 9 * x
+    * lib.Function("(y + 6) * x")(Map("y" -> 3)) // 9 * x
     * }}}
     * @return new [[Function]] instance with computed constants.
     */
@@ -83,9 +87,16 @@ sealed abstract class Function {
     }
 
     val s = this match {
-      case br: Function.Branch => if (br.leaves.forall(_.isInstanceOf[Function.Constant]))
-        new Function.Constant(br.func.body(br.leaves.map(_.asInstanceOf[Function.Constant].value.get)))
-      else Function.Branch(br.func, br.leaves.map(_.simplified))
+      case br: Function.Branch =>
+        (br.func match {
+          case s: Simplifiable => s.simplify(br.leaves)
+          case _ => br
+        }) match {
+          case branch: Function.Branch => if (branch.leaves.forall(_.isInstanceOf[Function.Constant]))
+            new Function.Constant(branch.func.body(branch.leaves.map(_.asInstanceOf[Function.Constant].value.get)))
+          else Function.Branch(branch.func, branch.leaves.map(_.simplified))
+          case x => x
+        }
       case _ => copy
     }
 
@@ -111,7 +122,7 @@ sealed abstract class Function {
     *
     * @example
     * {{{
-    * Function("x * (3 + y)").arguments
+    * lib.Function("x * (3 + y)").arguments
     * > Seq("x", "y")
     * }}}
     * @return ordered sequence of variable names as strings
@@ -132,8 +143,8 @@ sealed abstract class Function {
     *
     * @example
     * {{{
-    * Function("3 + 5").value // Some(7)
-    * Function("x + 5").value // None - as function has free (unsubstituted) variable 'x'
+    * lib.Function("3 + 5").value // Some(7)
+    * lib.Function("x + 5").value // None - as function has free (unsubstituted) variable 'x'
     * }}}
     * @return
     */
@@ -152,7 +163,7 @@ sealed abstract class Function {
     *
     * @example
     * {{{
-    * println(Function(3*x*cos(y + x)))
+    * println(lib.Function(3*x*cos(y + x)))
     * > mul(mul(3,x),cos(add(y,x)))
     * }}}
     * @return function body as string
@@ -165,8 +176,8 @@ sealed abstract class Function {
     *
     * @example
     * {{{
-    * val sqrt = Function("x `^` (1/2)") as "sqrt"
-    * Function.register(Function("sqrt(x) * 2"), "f")
+    * val sqrt = lib.Function("x `^` (1/2)") as "sqrt"
+    * lib.Function.register(lib.Function("sqrt(x) * 2"), "f")
     * }}}
     * @param name Name for the function to be referenced later with.
     * @return this
@@ -182,8 +193,13 @@ sealed abstract class Function {
   * todo doс
   */
 object Function {
-  private abstract case class Primitive(body: Seq[Double] => Double, name: String, arguments: Seq[String]) {
+  private abstract sealed case class Primitive(body: Seq[Double] => Double, name: String, arguments: Seq[String]) {
     def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch
+  }
+  private trait Simplifiable {
+    this: Primitive =>
+
+    def simplify(leaves: Seq[Function]): Function
   }
 
   private abstract sealed class Leaf extends Function
@@ -211,8 +227,8 @@ object Function {
 
   private sealed case class Branch(func: Primitive, leaves: Seq[Function]) extends Function {
     override def copy: Function = Branch(func, leaves.map(_.copy))
-    override def apply(namedArgs: Map[String, Double]): Function = Function.Branch(func, leaves.map(_ (namedArgs)
-    )).simplified
+    override def apply(namedArgs: Map[String, Double]): Function = Function.Branch(func, leaves.map(_ (namedArgs)))
+      .simplified
     override def substitute(namedArgs: Map[String, Function]): Function = Function.Branch(func, leaves.map(_
       .substitute(namedArgs)))
     implicit override def toString: String = s"${func.name}(${leaves.map(_.toString).mkString(", ")})"
@@ -236,30 +252,83 @@ object Function {
         Branch(mul, Seq(Branch(cos, Seq(leaves.head)), derived.head))
       }
     }
+
     object cos extends Primitive(args => Math.cos(args.head), "cos", Seq("x")) {
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(mul, Seq(Branch(neg, Seq(Branch(sin, Seq(leaves.head)))), derived.head))
       }
     }
-    object add extends Primitive(args => args.head + args(1), "add", Seq("x", "y")) with Symbolic {
+
+    object add extends Primitive(args => args.head + args(1), "add", Seq("x", "y"))
+      with Symbolic with Simplifiable {
       override val symbol: Char = '+'
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(add, Seq(derived.head, derived(1)))
       }
+      def simplify(leaves: Seq[Function]): Function = {
+        // 0 + x = x
+        leaves.head match {
+          case c: Constant if c.value.get == 0 => return leaves(1)
+          case _ =>
+        }
+
+        // x + 0 = x
+        leaves(1) match {
+          case c: Constant if c.value.get == 0 => return leaves.head
+          case _ =>
+        }
+
+        // x + y = x + y
+        Branch(this, leaves)
+      }
     }
-    object neg extends Primitive(args => -args.head, "neg", Seq("x")) with Symbolic {
+
+    object neg extends Primitive(args => -args.head, "neg", Seq("x"))
+      with Symbolic with Simplifiable {
       override val symbol: Char = '-'
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(neg, Seq(derived.head))
       }
+      def simplify(leaves: Seq[Function]): Function = {
+        leaves.head match {
+          case c: Constant if c.value.get == 0 => leaves.head
+          case _ => Branch(this, leaves)
+        }
+      }
     }
-    object mul extends Primitive(args => args.head * args(1), "mul", Seq("x", "y")) with Symbolic {
+
+    object mul extends Primitive(args => args.head * args(1), "mul", Seq("x", "y"))
+      with Symbolic with Simplifiable {
       override val symbol: Char = '*'
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(add, Seq(Branch(mul, Seq(derived.head, leaves(1))), Branch(mul, Seq(leaves.head, derived(1)))))
       }
+      def simplify(leaves: Seq[Function]): Function = {
+        leaves.head match {
+          case c: Constant =>
+            // 0 * x = 0
+            if (c.value.get == 0) return 0.0
+            // 1 * x = x
+            if (c.value.get == 1) return leaves(1)
+          case _ =>
+        }
+
+        leaves(1) match {
+          case c: Constant =>
+            // x * 0 = 0
+            if (c.value.get == 0) return 0.0
+            // x * 1 = x
+            if (c.value.get == 1) return leaves.head
+          case _ =>
+        }
+
+        // x * y = x * y
+        Branch(this, leaves)
+      }
     }
-    object div extends Primitive(args => args.head / args(1), "div", Seq("x", "y")) with Symbolic {
+
+    object div extends Primitive(args => args.head / args(1), "div", Seq("x", "y"))
+      with Symbolic with Simplifiable {
       override val symbol: Char = '/'
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(div,
@@ -268,22 +337,66 @@ object Function {
               Branch(neg, Seq(Branch(mul, Seq(derived(1), leaves.head)))))),
             Branch(mul, Seq(leaves(1), leaves(1)))))
       }
+      def simplify(leaves: Seq[Function]): Function = {
+        leaves.head match {
+          // 0 / x = 0
+          case c: Constant if c.value.get == 0 => return 0.0
+          // x / x = 1
+          case id: Identity => leaves(1) match {
+            case id2: Identity => if (id.argument == id2.argument) return 1.0
+            case _ =>
+          }
+          case _ =>
+        }
+
+        // x / 1 = x
+        leaves(1) match {
+          case c: Constant if c.value.get == 1 => return leaves.head
+          case _ =>
+        }
+
+        // x / y = x / y
+        Branch(this, leaves)
+      }
     }
 
-    object log extends Primitive(args => Math.log10(args(1))/Math.log10(args.head), "log", Seq("x", "y")) {
+    object log extends Primitive(args => Math.log10(args(1)) / Math.log10(args.head), "log", Seq("x", "y"))
+      with Simplifiable {
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(div, Seq(
           Branch(add, Seq(
             Branch(div, Seq(Branch(mul, Seq(derived(1), Branch(log, Seq(10.0, leaves.head)))), leaves(1)))
             , Branch(neg, Seq(
-            Branch(div, Seq(Branch(mul, Seq(derived.head, Branch(log, Seq(10.0, leaves(1))))), leaves(1)))
-          )))),
+              Branch(div, Seq(Branch(mul, Seq(derived.head, Branch(log, Seq(10.0, leaves(1))))), leaves(1)))
+            )))),
           Branch(mul, Seq(Branch(log, Seq(10.0, leaves.head)), Branch(log, Seq(10.0, leaves.head))))
         ))
       }
+      def simplify(leaves: Seq[Function]): Function = {
+        leaves.head match {
+          // log(0, x) = 0
+          case c: Constant if c.value.get == 0 => return 0.0
+          // log(x, x) = 1
+          case id: Identity => leaves(1) match {
+            case id2: Identity => if (id.argument == id2.argument) return 1.0
+            case _ =>
+          }
+          case _ =>
+        }
+
+        // log(x, 1) = 0
+        leaves(1) match {
+          case c: Constant if c.value.get == 1.0 => return 0.0
+          case _ =>
+        }
+
+        // log(x, y) = log(x, y)
+        Branch(this, leaves)
+      }
     }
 
-    object exp extends Primitive(args => Math.pow(args.head, args(1)), "exp", Seq("x", "y")) with Symbolic {
+    object exp extends Primitive(args => Math.pow(args.head, args(1)), "exp", Seq("x", "y"))
+      with Symbolic with Simplifiable {
       override val symbol: Char = '^'
       def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
         Branch(mul, Seq(
@@ -294,6 +407,29 @@ object Function {
           ))
         ))
 
+      }
+      def simplify(leaves: Seq[Function]): Function = {
+        leaves.head match {
+          case c: Constant =>
+            // 0 ^ x = 0
+            if (c.value.get == 0) return 0.0
+            // 1 ^ x = x
+            if (c.value.get == 1) return leaves(1)
+          case _ =>
+        }
+
+
+        leaves(1) match {
+          case c: Constant =>
+            // x ^ 1 = x
+            if (c.value.get == 1) return leaves.head
+            // x ^ 0 = 1
+            if (c.value.get == 0) return 1.0
+          case _ =>
+        }
+
+        // x ^ y = x ^ y
+        Branch(this, leaves)
       }
     }
 
@@ -490,8 +626,8 @@ object Function {
     *
     * @example
     * {{{
-    * Function.register(Function("sqrt(x) * 2"), "f")
-    * val sqrt = Function("x `^` (1/2)") as "sqrt"
+    * lib.Function.register(lib.Function("sqrt(x) * 2"), "f")
+    * val sqrt = lib.Function("x `^` (1/2)") as "sqrt"
     * }}}
     * @param name Name for the function to be referenced later with.
     * @return this
@@ -502,7 +638,7 @@ object Function {
   /**
     * Creates new function from string.
     *
-    * @example Function("2*x + 3`^`(5 + 3 * y)"
+    * @example lib.Function("2*x + 3`^`(5 + 3 * y)"
     * @param string String to be parsed
     * @return
     */

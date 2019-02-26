@@ -1,6 +1,7 @@
 import org.scalatest._
 
 import scala.collection.immutable.Stack
+import lib.Function
 
 class FunctionTest extends FlatSpec {
   "const" should "be a valid function" in {

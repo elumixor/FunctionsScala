@@ -62,11 +62,6 @@ object GuesserProject extends ProjectBase {
     def isDefined: Boolean = _value.isDefined
   }
 
-  /** Converts a double number to a string with 2 decimal positions */
-  private def stringNumber(n: Double): String = {
-    BigDecimal(n).setScale(2, BigDecimal.RoundingMode.HALF_UP).toString
-  }
-
   val guesser = new Guesser(target.value)
 
   def guess(): Unit = pf.value = guesser.approximate()
@@ -81,12 +76,12 @@ object GuesserProject extends ProjectBase {
 
     // Draw target
     target.render()
-    p5.text(stringNumber(target.value), target.x, p5.center.y - padding / 2)
+    p5.text("%.2f".format(target.value), target.x, p5.center.y - padding / 2)
 
     // Draw guess
     if (pf.isDefined) {
       pf.render()
-      p5.text(stringNumber(pf.value), mapVisual(pf.value), pf.y + padding)
+      p5.text("%.2f".format(pf.value), mapVisual(pf.value), pf.y + padding)
     }
   }
   override def keyPressed(): Unit = {
