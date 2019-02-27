@@ -108,7 +108,7 @@ object GuesserProject extends ProjectBase {
     // Iterations
     p5.text("Iterations " + guesser.iterations, padding, screen.y.top + p5.fontHeight)
 
-
+    guess()
   }
   override def keyPressed(): Unit = {
     super.keyPressed()

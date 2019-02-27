@@ -109,3 +109,14 @@ Also how the model should look
     > The downside is that approximation speed lowers
     drastically as we approach the target, so we need
     more variability.
+
+* Take previous experience into account:
+    > When we guessed better, we should make guesses
+    more like the best bets, and less like worse. We
+    should take into account previous guesses - the
+    example above always generates new guess based
+    upon **only the last guess**
+    >
+    > 
+  
+ 
