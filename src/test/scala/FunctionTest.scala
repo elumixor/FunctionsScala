@@ -29,7 +29,6 @@ class FunctionTest extends FlatSpec {
     lib.Function("(c - d) + (a)")
     lib.Function("(c - d) + a * 2")
     lib.Function("(c - d) + (a - b) *  2")
-
   }
 
 

@@ -13,6 +13,8 @@ object p5 {
   def gc_=(gc: GraphicsContext): Unit = this._gc = Some(gc)
   def gc: GraphicsContext = _gc.get
 
+  def fontHeight: Double = 25
+
   private var _stage: Option[JFXApp.PrimaryStage] = None
   def stage_=(stage: JFXApp.PrimaryStage): Unit = this._stage = Some(stage)
   def stage: JFXApp.PrimaryStage = _stage.get
@@ -61,6 +63,9 @@ object p5 {
   }
 
   def fill(color: Color): Unit = gc.fill = color
+  def stroke(color: Color): Unit = gc.stroke = color
+
+
   def ellipse(x: Int, y: Int, diameter: Int): Unit = ellipse(x, y, diameter, diameter)
   def ellipse(x: Int, y: Int, width: Int, height: Int): Unit = gc.fillOval(x - width / 2, y - height / 2, width, height)
   def triangle(x1: Double, y1: Double, x2: Double, y2: Double, x3: Double, y3: Double): Unit = {
