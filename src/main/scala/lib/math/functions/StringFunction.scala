@@ -1,58 +1,60 @@
-package lib.math
+package lib.math.functions
 
 import java.util.NoSuchElementException
 
 import scala.language.implicitConversions
 
 /**
-  * Factory for [[Function]] instances.
+  * Factory for [[StringFunction]] instances.
   * todo doс
   */
-object Function {
+object StringFunction {
   private abstract sealed case class Primitive(body: Seq[Double] => Double, name: String, arguments: Seq[String]) {
-    def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch
+    def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch
   }
   private trait Simplifiable {
     this: Primitive =>
 
-    def simplify(leaves: Seq[Function]): Function
+    def simplify(leaves: Seq[StringFunction]): StringFunction
   }
 
-  private abstract sealed class Leaf extends Function
+  private abstract sealed class Leaf extends StringFunction
 
   private class Identity(val argument: String) extends Leaf {
-    override def copy: Function = new Identity(argument)
-    override def apply(namedArgs: Map[String, Double]): Function = if (namedArgs.contains(argument))
-      new Function.Constant(namedArgs(argument))
+    override def copy: StringFunction = new Identity(argument)
+    override def apply(namedArgs: Map[String, Double]): StringFunction = if (namedArgs.contains(argument))
+      new StringFunction.Constant(namedArgs(argument))
     else copy
-    override def substitute(namedArgs: Map[String, Function]): Function = if (namedArgs.contains(argument))
+    override def substitute(namedArgs: Map[String, StringFunction]): StringFunction = if (namedArgs.contains(argument))
       namedArgs(argument).copy
     else copy
-    override def _derivative(argument: String): Function = if (this.argument == argument) 1.0 else 0.0
+    override def _derivative(argument: String): StringFunction = if (this.argument == argument) 1.0 else 0.0
     implicit override def toString: String = argument
   }
 
   private implicit class Constant(_value: Double) extends Leaf {
-    override def copy: Function = _value
+    override def copy: StringFunction = _value
     override def value: Option[Double] = Some(_value)
-    override def apply(namedArgs: Map[String, Double]): Function = copy
-    override def substitute(namedArgs: Map[String, Function]): Function = copy
-    override def _derivative(arguments: String): Function = 0.0
+    override def apply(namedArgs: Map[String, Double]): StringFunction = copy
+    override def substitute(namedArgs: Map[String, StringFunction]): StringFunction = copy
+    override def _derivative(arguments: String): StringFunction = 0.0
     implicit override def toString: String = _value.toString
   }
 
-  private sealed case class Branch(func: Primitive, leaves: Seq[Function]) extends Function {
-    override def copy: Function = Branch(func, leaves.map(_.copy))
+  private sealed case class Branch(func: Primitive, leaves: Seq[StringFunction]) extends StringFunction {
+    override def copy: StringFunction = Branch(func, leaves.map(_.copy))
 
-    override def apply(namedArgs: Map[String, Double]): Function = Function.Branch(func, leaves.map(_ (namedArgs)))
-                                                                   .simplified
+    override def apply(namedArgs: Map[String, Double]): StringFunction = StringFunction.Branch(func, leaves.map(_
+    (namedArgs)))
+                                                                         .simplified
 
-    override def substitute(namedArgs: Map[String, Function]): Function = Function.Branch(func, leaves.map(_
+    override def substitute(namedArgs: Map[String, StringFunction]): StringFunction = StringFunction.Branch(func,
+      leaves.map(_
       .substitute(namedArgs)))
 
     implicit override def toString: String = s"${func.name}(${leaves.map(_.toString).mkString(", ")})"
 
-    override protected def _derivative(argument: String): Function = {
+    override protected def _derivative(argument: String): StringFunction = {
       val derived = leaves.map(_._derivative(argument))
       func.derivative(leaves, derived)
     }
@@ -68,13 +70,13 @@ object Function {
     private type Math = java.lang.Math
 
     object sin extends Primitive(args => Math.sin(args.head), "sin", Seq("x")) {
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(mul, Seq(Branch(cos, Seq(leaves.head)), derived.head))
       }
     }
 
     object cos extends Primitive(args => Math.cos(args.head), "cos", Seq("x")) {
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(mul, Seq(Branch(neg, Seq(Branch(sin, Seq(leaves.head)))), derived.head))
       }
     }
@@ -82,10 +84,10 @@ object Function {
     object add extends Primitive(args => args.head + args(1), "add", Seq("x", "y"))
       with Symbolic with Simplifiable {
       override val symbol: Char = '+'
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(add, Seq(derived.head, derived(1)))
       }
-      def simplify(leaves: Seq[Function]): Function = {
+      def simplify(leaves: Seq[StringFunction]): StringFunction = {
         // 0 + x = x
         leaves.head match {
           case c: Constant if c.value.get == 0 => return leaves(1)
@@ -106,10 +108,10 @@ object Function {
     object neg extends Primitive(args => -args.head, "neg", Seq("x"))
       with Symbolic with Simplifiable {
       override val symbol: Char = '-'
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(neg, Seq(derived.head))
       }
-      def simplify(leaves: Seq[Function]): Function = {
+      def simplify(leaves: Seq[StringFunction]): StringFunction = {
         leaves.head match {
           case c: Constant if c.value.get == 0 => leaves.head
           case _ => Branch(this, leaves)
@@ -120,10 +122,10 @@ object Function {
     object mul extends Primitive(args => args.head * args(1), "mul", Seq("x", "y"))
       with Symbolic with Simplifiable {
       override val symbol: Char = '*'
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(add, Seq(Branch(mul, Seq(derived.head, leaves(1))), Branch(mul, Seq(leaves.head, derived(1)))))
       }
-      def simplify(leaves: Seq[Function]): Function = {
+      def simplify(leaves: Seq[StringFunction]): StringFunction = {
         leaves.head match {
           case c: Constant =>
             // 0 * x = 0
@@ -150,14 +152,14 @@ object Function {
     object div extends Primitive(args => args.head / args(1), "div", Seq("x", "y"))
       with Symbolic with Simplifiable {
       override val symbol: Char = '/'
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(div,
           Seq(Branch(add,
             Seq(Branch(mul, Seq(derived.head, leaves(1))),
               Branch(neg, Seq(Branch(mul, Seq(derived(1), leaves.head)))))),
             Branch(mul, Seq(leaves(1), leaves(1)))))
       }
-      def simplify(leaves: Seq[Function]): Function = {
+      def simplify(leaves: Seq[StringFunction]): StringFunction = {
         leaves.head match {
           // 0 / x = 0
           case c: Constant if c.value.get == 0 => return 0.0
@@ -182,7 +184,7 @@ object Function {
 
     object log extends Primitive(args => Math.log10(args(1)) / Math.log10(args.head), "log", Seq("x", "y"))
       with Simplifiable {
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(div, Seq(
           Branch(add, Seq(
             Branch(div, Seq(Branch(mul, Seq(derived(1), Branch(log, Seq(10.0, leaves.head)))), leaves(1)))
@@ -192,7 +194,7 @@ object Function {
           Branch(mul, Seq(Branch(log, Seq(10.0, leaves.head)), Branch(log, Seq(10.0, leaves.head))))
         ))
       }
-      def simplify(leaves: Seq[Function]): Function = {
+      def simplify(leaves: Seq[StringFunction]): StringFunction = {
         leaves.head match {
           // log(0, x) = 0
           case c: Constant if c.value.get == 0 => return 0.0
@@ -218,7 +220,7 @@ object Function {
     object exp extends Primitive(args => Math.pow(args.head, args(1)), "exp", Seq("x", "y"))
       with Symbolic with Simplifiable {
       override val symbol: Char = '^'
-      def derivative(leaves: Seq[Function], derived: Seq[Function]): Branch = {
+      def derivative(leaves: Seq[StringFunction], derived: Seq[StringFunction]): Branch = {
         Branch(mul, Seq(
           Branch(exp, Seq(leaves.head, Branch(add, Seq(leaves(1), Branch(neg, Seq(1.0)))))),
           Branch(add, Seq(
@@ -228,7 +230,7 @@ object Function {
         ))
 
       }
-      def simplify(leaves: Seq[Function]): Function = {
+      def simplify(leaves: Seq[StringFunction]): StringFunction = {
         leaves.head match {
           case c: Constant =>
             // 0 ^ x = 0
@@ -258,7 +260,7 @@ object Function {
   }
 
   /** Registered functions */
-  private var registered: Map[String, Function] = primitives.toSeq.map(p => p.name -> Branch(p, p.arguments.map
+  private var registered: Map[String, StringFunction] = primitives.toSeq.map(p => p.name -> Branch(p, p.arguments.map
   (new Identity(_)))).toMap
 
 
@@ -435,7 +437,7 @@ object Function {
   }
 
   /** Recursively parses function-like strings and forms a call tree */
-  private def formTree(string: String): Function = parseFunction(string) match {
+  private def formTree(string: String): StringFunction = parseFunction(string) match {
     case Some(parsed) => registered(parsed._1).copy.substitute(parsed._2.map(formTree): _*)
     case None => try {
       string.toDouble
@@ -449,24 +451,24 @@ object Function {
     *
     * @example
     * {{{
-    * lib.math.Function.register(lib.math.Function("sqrt(x) * 2"), "f")
-    * val sqrt = lib.math.Function("x `^` (1/2)") as "sqrt"
+    * lib.math.functions.Function.register(lib.math.functions.Function("sqrt(x) * 2"), "f")
+    * val sqrt = lib.math.functions.Function("x `^` (1/2)") as "sqrt"
     * }}}
     * @param name Name for the function to be referenced later with.
     * @return this
     */
-  def register(f: Function, name: String): Unit = registered = registered - name + (name -> f)
+  def register(f: StringFunction, name: String): Unit = registered = registered - name + (name -> f)
 
   // todo doc
   /**
     * Creates new function from string.
     *
-    * @example lib.math.Function("2*x + 3`^`(5 + 3 * y)"
+    * @example lib.math.functions.Function("2*x + 3`^`(5 + 3 * y)"
     * @param string String to be parsed
     * @return
     */
   @throws[IllegalArgumentException]("If opening and closing brackets do not match")
-  def apply(string: String): Function = if (!bracketsMatch(string))
+  def apply(string: String): StringFunction = if (!bracketsMatch(string))
     throw new IllegalArgumentException("Error parsing function: wrong opening and closing brackets count")
   else formTree(adjust(string.trim)).simplified
 }
@@ -480,16 +482,16 @@ object Function {
 //@JSImport("bar.js", "Foo")
 //class JSFoo(val x: Int) extends js.Object
 
-sealed abstract class Function {
+sealed abstract class StringFunction {
   /**
     * Substitutes arguments for values. Applying occurs in lexicographical order of arguments, used in a function.<br/>
-    * Returns new [[Function]] with substituted arguments as constants.<br/>
+    * Returns new [[StringFunction]] with substituted arguments as constants.<br/>
     * Returned function is simplified.<br/>
     *
     * @param args Argument values
     * @example
     * {{{
-    * val f = lib.math.Function("x + 3 * y") // function
+    * val f = lib.math.functions.Function("x + 3 * y") // function
     *
     * // Substituting
     * f(1)    // 1 + 3 * y
@@ -500,66 +502,68 @@ sealed abstract class Function {
     * {{{
     * f(Map("y" -> 1)) // x + 3 * 1, simplifying -> x + 3
     * }}}
-    * @return new [[Function]] with substituted arguments, simplified.
+    * @return new [[StringFunction]] with substituted arguments, simplified.
     */
-  def apply(args: Double*): Function = apply(args.zipWithIndex.map(f => (arguments(f._2), f._1)).toMap)
+  def apply(args: Double*): StringFunction = apply(args.zipWithIndex.map(f => (arguments(f._2), f._1)).toMap)
 
   /**
     * Substitutes arguments for values. Applying with allows to select variables for substituting.<br/>
-    * Returns new [[Function]] with substituted arguments as constants.<br/>
+    * Returns new [[StringFunction]] with substituted arguments as constants.<br/>
     * Returned function is simplified.<br/>
     *
     * @param namedArgs Map of named arguments: name -> value
     * @example
     * {{{
-    * val f = lib.math.Function("x + 3 * y") // function
+    * val f = lib.math.functions.Function("x + 3 * y") // function
     *
     * // Substituting
     * val partially       = f(Map("x" -> 1)) // 1 + 3 * y
     * val differently     = f(Map("y" -> 1)) // x + 3 * 1, simplifying -> x + 3
     * val fully = f(Map("x" -> 1, "y" -> 2)) // 1 + 3 * 2, simplifying -> 7
     * }}}
-    * @return new [[Function]] with substituted arguments, simplified.
+    * @return new [[StringFunction]] with substituted arguments, simplified.
     */
-  def apply(namedArgs: Map[String, Double]): Function
+  def apply(namedArgs: Map[String, Double]): StringFunction
 
   // todo doc
   /** Substitute function's argument for another function */
-  def substitute(functions: Function*): Function = substitute(functions.zipWithIndex.map(f => (arguments(f._2), f._1)
+  def substitute(functions: StringFunction*): StringFunction = substitute(functions.zipWithIndex.map(f => (arguments
+                                                                                                           (f._2), f._1)
   ).toMap)
 
   // todo doc
   /** Substitute variables for functions (branches) */
-  def substitute(namedArgs: Map[String, Function]): Function
+  def substitute(namedArgs: Map[String, StringFunction]): StringFunction
 
   /**
-    * Computes constant expressions, returning a simplified [[Function]] instance.<br/>
-    * This converts branches([[Function.Branch]]), with leaves ''only'' of [[Function.Constant]] to
-    * [[Function.Constant]] themselves.<br/>
+    * Computes constant expressions, returning a simplified [[StringFunction]] instance.<br/>
+    * This converts branches([[StringFunction.Branch]]), with leaves ''only'' of [[StringFunction.Constant]] to
+    * [[StringFunction.Constant]] themselves.<br/>
     *
     * @note Simplification is done automatically on applying arguments.
     * @example
     * {{{
-    * lib.math.Function("(3 + 6) * x").simplified     // 9 * x
-    * lib.math.Function("(y + 6) * x")(Map("y" -> 3)) // 9 * x
+    * lib.math.functions.Function("(3 + 6) * x").simplified     // 9 * x
+    * lib.math.functions.Function("(y + 6) * x")(Map("y" -> 3)) // 9 * x
     * }}}
-    * @return new [[Function]] instance with computed constants.
+    * @return new [[StringFunction]] instance with computed constants.
     */
-  def simplified: Function = {
-    def callsCount(of: Function): Int = of match {
-      case br: Function.Branch => 1 + br.leaves.map(callsCount).sum
+  def simplified: StringFunction = {
+    def callsCount(of: StringFunction): Int = of match {
+      case br: StringFunction.Branch => 1 + br.leaves.map(callsCount).sum
       case _ => 0
     }
 
     val s = this match {
-      case br: Function.Branch =>
+      case br: StringFunction.Branch =>
         (br.func match {
-          case s: Function.Simplifiable => s.simplify(br.leaves)
+          case s: StringFunction.Simplifiable => s.simplify(br.leaves)
           case _ => br
         }) match {
-          case branch: Function.Branch => if (branch.leaves.forall(_.isInstanceOf[Function.Constant]))
-            new Function.Constant(branch.func.body(branch.leaves.map(_.asInstanceOf[Function.Constant].value.get)))
-          else Function.Branch(branch.func, branch.leaves.map(_.simplified))
+          case branch: StringFunction.Branch => if (branch.leaves.forall(_.isInstanceOf[StringFunction.Constant]))
+            new StringFunction.Constant(branch.func.body(branch.leaves.map(_.asInstanceOf[StringFunction.Constant]
+              .value.get)))
+          else StringFunction.Branch(branch.func, branch.leaves.map(_.simplified))
           case x => x
         }
       case _ => copy
@@ -569,33 +573,33 @@ sealed abstract class Function {
   }
 
   /** */
-  def derivative(power: Int): Function = {
+  def derivative(power: Int): StringFunction = {
     val args = arguments
-    if (args.isEmpty) new Function.Constant(0) else derivative(args.head, power)
+    if (args.isEmpty) new StringFunction.Constant(0) else derivative(args.head, power)
   }
 
   /** Partial derivative by argument */
-  def derivative(argument: String, power: Int = 1): Function = {
+  def derivative(argument: String, power: Int = 1): StringFunction = {
     if (power == 0) copy
     else _derivative(argument).simplified.derivative(argument, power - 1)
   }
 
-  protected def _derivative(argument: String): Function
+  protected def _derivative(argument: String): StringFunction
 
   /**
     * Variable names, ordered lexicographically, used in a function as sequence of strings.
     *
     * @example
     * {{{
-    * lib.math.Function("x * (3 + y)").arguments
+    * lib.math.functions.Function("x * (3 + y)").arguments
     * > Seq("x", "y")
     * }}}
     * @return ordered sequence of variable names as strings
     */
   def arguments: Seq[String] = {
-    def _arguments(of: Function): Seq[String] = of match {
-      case id: Function.Identity => Seq(id.argument)
-      case br: Function.Branch => br.leaves.flatMap(_arguments)
+    def _arguments(of: StringFunction): Seq[String] = of match {
+      case id: StringFunction.Identity => Seq(id.argument)
+      case br: StringFunction.Branch => br.leaves.flatMap(_arguments)
       case _ => Seq()
     }
 
@@ -608,8 +612,8 @@ sealed abstract class Function {
     *
     * @example
     * {{{
-    * lib.math.Function("3 + 5").value // Some(7)
-    * lib.math.Function("x + 5").value // None - as function has free (unsubstituted) variable 'x'
+    * lib.math.functions.Function("3 + 5").value // Some(7)
+    * lib.math.functions.Function("x + 5").value // None - as function has free (unsubstituted) variable 'x'
     * }}}
     * @return
     */
@@ -618,17 +622,17 @@ sealed abstract class Function {
   /**
     * Returns a deep copy of an instance.
     *
-    * @return new [[Function]] instance with identical call tree, name and variables
+    * @return new [[StringFunction]] instance with identical call tree, name and variables
     */
-  def copy: Function
+  def copy: StringFunction
 
   /**
     * Returns function body as string.<br/>
-    * This shows how more complex functions break down into [[Function.Primitive]].
+    * This shows how more complex functions break down into [[StringFunction.Primitive]].
     *
     * @example
     * {{{
-    * println(lib.math.Function(3*x*cos(y + x)))
+    * println(lib.math.functions.Function(3*x*cos(y + x)))
     * > mul(mul(3,x),cos(add(y,x)))
     * }}}
     * @return function body as string
@@ -637,18 +641,18 @@ sealed abstract class Function {
 
   /**
     * Register function with name to further use in expressions.<br/>
-    * This is the same as [[Function.register]]<br/>
+    * This is the same as [[StringFunction.register]]<br/>
     *
     * @example
     * {{{
-    * val sqrt = lib.math.Function("x `^` (1/2)") as "sqrt"
-    * lib.math.Function.register(lib.math.Function("sqrt(x) * 2"), "f")
+    * val sqrt = lib.math.functions.Function("x `^` (1/2)") as "sqrt"
+    * lib.math.functions.Function.register(lib.math.functions.Function("sqrt(x) * 2"), "f")
     * }}}
     * @param name Name for the function to be referenced later with.
     * @return this
     */
-  def as(name: String): Function = {
-    Function.register(this, name)
+  def as(name: String): StringFunction = {
+    StringFunction.register(this, name)
     this
   }
 }

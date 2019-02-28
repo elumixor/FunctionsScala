@@ -1,7 +1,8 @@
 package projects.shared
 
+import lib.math.Point
 import lib.traits.{Locatable, Moving}
-import lib.{Vec2, p5}
+import lib.p5
 import scalafx.scene.paint.Color
 
 class Pathfinder extends Locatable with Moving {
@@ -16,7 +17,7 @@ class Pathfinder extends Locatable with Moving {
 
     // Rotate pathfinder so it points to hit current speed
     if (!speed.isZero) {
-      deg = Math.acos(speed * Vec2(0, -1) / (speed.length * Vec2(0, 1).length)) * 180 / Math.PI
+      deg = Math.acos(speed * Point(0, -1) / (speed.length * Point(0, 1).length)) * 180 / Math.PI
       p5.rotate(deg)
     }
 

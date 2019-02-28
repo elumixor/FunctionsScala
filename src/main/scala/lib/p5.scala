@@ -1,5 +1,6 @@
 package lib
 
+import lib.math.Point
 import lib.p5.Coordinates.Coordinates
 import scalafx.application.JFXApp
 import scalafx.scene.canvas.GraphicsContext
@@ -44,9 +45,9 @@ object p5 {
 
 
 
-  var height: Int = 0
-  var width: Int = 0
-  def center: Point = Point(width / 2, height / 2)
+  var height: Double = 0
+  var width: Double = 0
+  def center: Point = (width / 2, height / 2)
 
 
   def background(color: Color): Unit = {
@@ -60,12 +61,12 @@ object p5 {
   def stroke(color: Color): Unit = gc.stroke = color
 
 
-  def ellipse(x: Int, y: Int, diameter: Int): Unit = ellipse(x, y, diameter, diameter)
-  def ellipse(x: Int, y: Int, width: Int, height: Int): Unit = gc.fillOval(x - width / 2, y - height / 2, width, height)
+  def ellipse(x: Double, y: Double, diameter: Double): Unit = ellipse(x, y, diameter, diameter)
+  def ellipse(x: Double, y: Double, width: Double, height: Double): Unit = gc.fillOval(x - width / 2, y - height / 2, width, height)
   def triangle(x1: Double, y1: Double, x2: Double, y2: Double, x3: Double, y3: Double): Unit = {
     gc.fillPolygon(Seq((x1, y1), (x2, y2), (x3, y3)))
   }
-  def rectangle(x: Int, y: Int, width: Int, height: Int): Unit = {
+  def rectangle(x: Double, y: Double, width: Double, height: Double): Unit = {
     gc.fillRect(x, y, width, height)
   }
   def polygon(points: Seq[(Int, Int)]): Unit = gc.fillPolygon(points.map(p => (p._1.toDouble, p._2.toDouble)))
@@ -73,5 +74,5 @@ object p5 {
   def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit = gc.strokeLine(x1, y1, x2, y2)
 
   // Register functions
-  lib.math.Function("x ^ (1/2)") as "sqrt"
+  lib.math.functions.StringFunction("x ^ (1/2)") as "sqrt"
 }

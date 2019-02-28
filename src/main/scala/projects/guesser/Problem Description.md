@@ -32,7 +32,7 @@ Also how the model should look
     var guess: Double = lib.p5.random(-1, 1)        
   
     // using target here is not what we want for reinforcement learning
-    val MSE = lib.math.Function("((target - guess)/2)^2")(Map("target" -> target))
+    val MSE = lib.math.functions.Function("((target - guess)/2)^2")(Map("target" -> target))
  
     val derived = MSE.derivative("guess")
     val learningRate = .1
@@ -56,6 +56,40 @@ Also how the model should look
     >
     > The bigger the difference, obviously, the 
     smaller the similarity is.
+    
+* Generating similar numbers
+    > Similar number means a number, that does not differ ''a lot'' from a reference.
+     More precisely, similarity is a function that displays a difference between numbers.
+    >
+    > **Divergence** is the maximum possible difference between randomly generated number
+     and a reference number. It defines a range generated numbers as:
+     `(reference - divergence, reference + divergence)`
+    > 
+    > By specifying divergence and a reference we can generate similar numbers:
+    >
+    > similar = reference + signum(R - 0.5) * divergence * R
+    >
+    > where `R` is randomly generated number in (0, 1) and  `signum` is a
+    [sign function](https://en.wikipedia.org/wiki/Sign_function).
+    >
+    > However, we would like to **more likely** generate a number, that is more similar
+    to reference. This can be done by specifying similarity:
+    >
+    > similar = reference * signum(R - 0.5) * divergence * R ^**similarity**^
+    >
+    > The bigger the similarity is, the more likely a generated number will be more
+    similar to a reference.
+    >
+    > As similarity approaches +infinity, the difference between a generated number and a
+    reference approaches 0. And the likelihood of generating such number approaches 100%
+    >
+    > As similarity approaches -infinity, the difference between a generated number and a
+    reference approaches infinity. And the likelihood of generating such number approaches 0%
+    >
+    > If similarity equals 0, then we "don't care" about the similarity at all - only about
+    divergence, thus randomly picking numbers in allowed  range
+    >
+    > We also want to map similarity to ange -1, 1, so we use tan(similarity * pi / 2) for that 
 
 * Guess's gain (how good the value is)
     > We need to determine how good the guess is.
@@ -83,7 +117,7 @@ Also how the model should look
     val target: Double = lib.p5.random(-1, 1)  
     var guess: Double = lib.p5.random(-1, 1)    
   
-    val MSE = lib.math.Function("((target - guess)/2)^2")(Map("target" -> target))
+    val MSE = lib.math.functions.Function("((target - guess)/2)^2")(Map("target" -> target))
 
     
     /** How good a guess is */

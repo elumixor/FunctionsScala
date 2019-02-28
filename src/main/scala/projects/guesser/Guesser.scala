@@ -5,7 +5,7 @@ import lib.p5
 class Guesser(val target: Double, val min: Double = -1, val max: Double = 1) {
   private var guess: Double = lib.math.random(min, max)
   def getGuess: Double = guess
-  private val MSE = lib.math.Function("((target - guess)/2)^2")(Map("target" -> target))
+  private val MSE = lib.math.functions.StringFunction("((target - guess)/2)^2")(Map("target" -> target))
 
   /** Map of guess -> gain */
   var guessesToGain: Map[Double, Double] = Map(guess -> gain(guess))
@@ -58,8 +58,8 @@ class Guesser(val target: Double, val min: Double = -1, val max: Double = 1) {
     //
     //    numerator/ denominator
 
-    val totalGain = guesses.values.sum
-    val number = guesses.map(v => v._1 * v._2 / totalGain).sum / guesses.size
+      val totalGain = guesses.values.sum
+      val number = guesses.map(v => v._1 * v._2 / totalGain).sum / guesses.size
     val similarity = .5
     similar(number, similarity)
 
