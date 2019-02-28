@@ -32,7 +32,7 @@ Also how the model should look
     var guess: Double = lib.p5.random(-1, 1)        
   
     // using target here is not what we want for reinforcement learning
-    val MSE = lib.Function("((target - guess)/2)^2")(Map("target" -> target))
+    val MSE = lib.math.Function("((target - guess)/2)^2")(Map("target" -> target))
  
     val derived = MSE.derivative("guess")
     val learningRate = .1
@@ -83,7 +83,7 @@ Also how the model should look
     val target: Double = lib.p5.random(-1, 1)  
     var guess: Double = lib.p5.random(-1, 1)    
   
-    val MSE = lib.Function("((target - guess)/2)^2")(Map("target" -> target))
+    val MSE = lib.math.Function("((target - guess)/2)^2")(Map("target" -> target))
 
     
     /** How good a guess is */
@@ -116,7 +116,13 @@ Also how the model should look
     should take into account previous guesses - the
     example above always generates new guess based
     upon **only the last guess**
-    >
-    > 
+    
+* Similarity function
+    > Todo    
+
+* Similar to multiple values 
+    > ???
+    
+    * Weighted 
   
  

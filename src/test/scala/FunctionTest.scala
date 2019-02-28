@@ -1,4 +1,4 @@
-import lib.Function
+import lib.math.Function
 import org.scalatest._
 
 class FunctionTest extends FlatSpec {
@@ -20,15 +20,15 @@ class FunctionTest extends FlatSpec {
   }
 
   it should "work" in {
-    lib.Function("-a * 2")
-    lib.Function("-a ^ 2")
-    lib.Function("c - d + a")
-    lib.Function("c - d + a - b")
-    lib.Function("(c - d) + (a - b)")
-    lib.Function("(c - d) + a")
-    lib.Function("(c - d) + (a)")
-    lib.Function("(c - d) + a * 2")
-    lib.Function("(c - d) + (a - b) *  2")
+    lib.math.Function("-a * 2")
+    lib.math.Function("-a ^ 2")
+    lib.math.Function("c - d + a")
+    lib.math.Function("c - d + a - b")
+    lib.math.Function("(c - d) + (a - b)")
+    lib.math.Function("(c - d) + a")
+    lib.math.Function("(c - d) + (a)")
+    lib.math.Function("(c - d) + a * 2")
+    lib.math.Function("(c - d) + (a - b) *  2")
   }
 
 

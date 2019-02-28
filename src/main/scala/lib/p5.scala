@@ -32,10 +32,7 @@ object p5 {
   // todo
   val coordinates: Coordinates = Coordinates.Windowed
 
-  /** Map value from one range to another proportionally */
-  def map(value: Double, min1: Double, max1: Double, min2: Double, max2: Double): Double = {
-    min2 + (max2 - min2) * (value - min1) / (max1 - min1)
-  }
+
 
 
   // Math
@@ -43,11 +40,8 @@ object p5 {
   // Transformations
   def translate(x: Double, y: Double): Unit = gc.translate(x, y)
   def rotate(degrees: Double): Unit = gc.rotate(degrees)
-
-  /** Random number in range */
-  def random(min: Double, max: Double): Double = map(Math.random(), 0, 1, min, max)
-
   // Graphics
+
 
 
   var height: Int = 0
@@ -79,5 +73,5 @@ object p5 {
   def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit = gc.strokeLine(x1, y1, x2, y2)
 
   // Register functions
-  lib.Function("x ^ (1/2)") as "sqrt"
+  lib.math.Function("x ^ (1/2)") as "sqrt"
 }

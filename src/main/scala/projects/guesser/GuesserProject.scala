@@ -33,7 +33,7 @@ object GuesserProject extends ProjectBase {
 
   /** Maps a number (either target or guess) to screen coordinates */
   private def mapVisual(value: Double): Int =
-    p5.map(value, range.min, range.max, screen.x.left, screen.x.right).toInt
+    lib.math.map(value, range.min, range.max, screen.x.left, screen.x.right).toInt
 
   /** === Target's position. ===
     * As for 1D problem, we'll only have '''x''' coordinate.
@@ -46,7 +46,7 @@ object GuesserProject extends ProjectBase {
     /** ===Generates target's value.===
       * Also adjusts x coordinate of visual representation */
     def generate(): Double = {
-      value = p5.random(range.min, range.max)
+      value = lib.math.random(range.min, range.max)
 
       // We also need to map visual representation coordinate
       x = mapVisual(value)
@@ -87,7 +87,7 @@ object GuesserProject extends ProjectBase {
       val opacity = (g2gI._2 + 1).toDouble / guesser.guessesToGain.size.toDouble
       p5.stroke(Color.rgb(55, 155, 0, opacity))
       val x = mapVisual(g2gI._1._1)
-      val gain = p5.map(g2gI._1._2, 0, 1, screen.y.center, screen.y.top + padding)
+      val gain = lib.math.map(g2gI._1._2, 0, 1, screen.y.center, screen.y.top + padding)
       p5.line(x, screen.y.center, x, gain)
     })
     p5.stroke(Color.Black)
