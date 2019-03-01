@@ -19,11 +19,6 @@ package object math {
     min2 + (max2 - min2) * (value - min1) / (max1 - min1)
   }
 
-  /** Random number in range */
-  @inline def random(min: Double, max: Double): Double = {
-    map(smath.random(), 0, 1, min, max)
-  }
-
   /** Restricts a value to a range */
   @inline def clamp(value: Double, min: Double, max: Double): Double = {
     smath.min(max, smath.max(min, value))
@@ -37,7 +32,32 @@ package object math {
   }
 
   /** Ordered interval */
-  case class Interval(min: Double, max: Double)
+  case class Interval(min: Double, max: Double) {
+    def intersects(another: Interval): Option[Interval] = {
+      val ordered = if (another.max > max) (this, another) else (another, this)
+      if (ordered._1.max < ordered._2.min) None
+      else {
+        val sorted = Seq(min, max, another.min, another.max).sorted
+        Some((sorted(1), sorted(2)))
+      }
+    }
+    def intersects(min: Double, max: Double): Option[Interval] = intersects((min, max))
+  }
+
+  object Interval {
+    def intersections(intervals: Interval*): Option[Interval] = {
+      if (intervals.isEmpty) None
+      else {
+        var result: Option[Interval] = Some(intervals.head)
+        for (interval <- intervals.drop(0)) {
+          result = result.get.intersects(interval)
+          if (result.isEmpty) return None
+        }
+        result
+      }
+    }
+  }
+
 
   implicit def toInterval(min: Double, max: Double): Interval = Interval(min, max)
   implicit def toInterval(max: Double): Interval = Interval(0, max)

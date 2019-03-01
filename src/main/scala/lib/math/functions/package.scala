@@ -41,16 +41,15 @@ package object functions {
     * @param b interval end
     * @return Some containing value of argument where functions intersect, else None
     */
-  def findFunctionsIntersection(f: Double => Double, g: Double => Double, a: Double, b: Double): Seq[Point] = {
-    // assert a < b ? Does reversing the range influence anything? (probably not)
+  def findFunctionsIntersection(f: Double => Double, g: Double => Double, a: Double, b: Double): Set[Point] = {
     val fa = f(a)
     val fb = f(b)
 
     val ga = g(a)
     val gb = g(b)
 
-    if (fa ~= ga) return Seq((a, average(fa, ga)))
-    if (fb ~= gb) return Seq((b, average(fb, gb)))
+    if (fa ~= ga) return Set((a, average(fa, ga)))
+    if (fb ~= gb) return Set((b, average(fb, gb)))
 
     /** Returns (min, max) bounds of function values in range */
     def sortedBounds(a: Double, b: Double): Interval = if (a > b) (b, a) else (a, b)
@@ -58,7 +57,7 @@ package object functions {
     val boundsF = sortedBounds(fa, fb)
     val boundsG = sortedBounds(ga, gb)
 
-    if (boundsF.min > boundsG.max || boundsF.max < boundsG.min) return Seq()
+    if (boundsF.min > boundsG.max || boundsF.max < boundsG.min) return Set()
 
     val p1 = Point(a, fa)
     val p2 = Point(b, fb)
@@ -66,11 +65,11 @@ package object functions {
     val p4 = Point(b, gb)
 
     val same = math.segmentsIntersection(p1, p2, p3, p4)
-    (if (same.isDefined) {
+    if (same.isDefined) {
       findFunctionsIntersection(f, g, a, same.get.x) ++ findFunctionsIntersection(f, g, same.get.x, b)
     } else {
       val different = math.segmentsIntersection(p1, p4, p3, p2)
       findFunctionsIntersection(f, g, a, different.get.x) ++ findFunctionsIntersection(f, g, different.get.x, b)
-    }).distinct
+    }
   }
 }

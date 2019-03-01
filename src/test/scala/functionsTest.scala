@@ -21,6 +21,8 @@ class functionsTest extends FlatSpec with Matchers {
   it should "work" in {
     val f: Double => Double = x => x  * x
     val g: Double => Double = x => 1 - x
-    println(functions.findFunctionsIntersection(f, g, 0, 5))
+
+    functions.findFunctionsIntersection(Math.sin, Math.cos, 0, 10).foreach(println)
+    functions.findFunctionsIntersection(Math.sin, Math.cos, 10, 0).foreach(println)
   }
 }

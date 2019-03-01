@@ -1,5 +1,6 @@
 package projects.guesser
 
+import lib.math.probability._
 import lib.p5
 import projects.ProjectBase
 import projects.shared.{Pathfinder, Target}
@@ -46,7 +47,7 @@ object GuesserProject extends ProjectBase {
     /** ===Generates target's value.===
       * Also adjusts x coordinate of visual representation */
     def generate(): Double = {
-      value = lib.math.random(range.min, range.max)
+      value = random(range.min, range.max)
 
       // We also need to map visual representation coordinate
       x = mapVisual(value)
@@ -70,9 +71,12 @@ object GuesserProject extends ProjectBase {
   }
 
   val guesser = new Guesser(target.value)
-  pf.value = guesser.getGuess
+  pf.value = guesser.guess
 
-  def guess(): Unit = pf.value = guesser.approximate()
+  def guess(): Unit = {
+    val guess = guesser.approximate()
+    if (guess.isDefined) pf.value = guess.get
+  }
   override def draw(): Unit = {
     p5.background(Color.White)
 
@@ -107,6 +111,9 @@ object GuesserProject extends ProjectBase {
 
     // Iterations
     p5.text("Iterations " + guesser.iterations, padding, screen.y.top + p5.fontHeight)
+
+    // Guess
+    p5.text("Last guess " + guesser.guess, screen.x.center, screen.y.top)
 
     guess()
   }
